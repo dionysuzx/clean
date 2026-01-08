@@ -219,6 +219,7 @@ fn remove_border_pipes(text: &str) -> String {
             // Remove leading > (markdown quote / prompt prefix)
             let trimmed = trimmed.trim();
             let trimmed = trimmed.strip_prefix('>').unwrap_or(trimmed);
+            let trimmed = trimmed.strip_prefix('›').unwrap_or(trimmed);
             trimmed.trim()
         })
         .collect::<Vec<_>>()
