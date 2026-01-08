@@ -10,13 +10,15 @@ cargo install --path .
 
 ## Usage
 
+Copy messy text, then:
+```bash
+clean
+```
+Clipboard is cleaned. Paste.
+
+Also works with pipes:
 ```bash
 cat dirty.txt | clean
-```
-
-Useful alias for clipboard:
-```bash
-alias clip='clean | pbcopy'
 ```
 
 ## What it does
@@ -25,3 +27,4 @@ alias clip='clean | pbcopy'
 - Strips leading `>` and border pipes
 - Merges broken lines while preserving lists and structure
 - Normalizes whitespace
+- Copies result to clipboard

@@ -1,10 +1,80 @@
 use std::io::{self, Read, Write};
+use std::process::{Command, Stdio};
 
 fn main() {
-    let mut input = String::new();
-    io::stdin().read_to_string(&mut input).expect("failed to read stdin");
+    let input = if atty::is(atty::Stream::Stdin) {
+        // Interactive: read from clipboard
+        match read_clipboard() {
+            Some(text) => text,
+            None => {
+                eprintln!("Failed to read clipboard");
+                std::process::exit(1);
+            }
+        }
+    } else {
+        // Piped input
+        let mut input = String::new();
+        io::stdin().read_to_string(&mut input).expect("failed to read stdin");
+        input
+    };
+
     let cleaned = clean(&input);
-    io::stdout().write_all(cleaned.as_bytes()).expect("failed to write stdout");
+
+    // Output to stdout
+    println!("{}", cleaned);
+
+    // Copy to clipboard
+    if copy_to_clipboard(&cleaned) {
+        eprintln!("✓ Clipboard cleaned");
+    }
+}
+
+fn read_clipboard() -> Option<String> {
+    // macOS
+    if let Ok(output) = Command::new("pbpaste").output() {
+        if output.status.success() {
+            return String::from_utf8(output.stdout).ok();
+        }
+    }
+
+    // Linux (xclip)
+    if let Ok(output) = Command::new("xclip")
+        .args(["-selection", "clipboard", "-o"])
+        .output()
+    {
+        if output.status.success() {
+            return String::from_utf8(output.stdout).ok();
+        }
+    }
+
+    None
+}
+
+fn copy_to_clipboard(text: &str) -> bool {
+    // macOS
+    if let Ok(mut child) = Command::new("pbcopy")
+        .stdin(Stdio::piped())
+        .spawn()
+    {
+        if let Some(mut stdin) = child.stdin.take() {
+            let _ = stdin.write_all(text.as_bytes());
+        }
+        return child.wait().map(|s| s.success()).unwrap_or(false);
+    }
+
+    // Linux (xclip)
+    if let Ok(mut child) = Command::new("xclip")
+        .args(["-selection", "clipboard"])
+        .stdin(Stdio::piped())
+        .spawn()
+    {
+        if let Some(mut stdin) = child.stdin.take() {
+            let _ = stdin.write_all(text.as_bytes());
+        }
+        return child.wait().map(|s| s.success()).unwrap_or(false);
+    }
+
+    false
 }
 
 fn clean(input: &str) -> String {
