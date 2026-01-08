@@ -1,9 +1,24 @@
-To reproduce this code:
-1. `git clone https://github.com/TheJoWo/Clean-Clode`
-2. Feed this prompt to an LLM in that directory
+To reproduce: `git clone https://github.com/TheJoWo/Clean-Clode` and feed this prompt to an LLM in that directory.
 
 ---
 
-> In this directory I've placed a project, `Clean-Clode`. Clean-Clode simply removes all this formatting junk. Rewrite Clean-Clode into a CLI util in Rust, called `clean`. Using `clean` would be simply `cat dirty.txt | clean`. Users then will likely create an alias in their shell that does something like `cat <arg[0]> | clean | pbcopy` to get it on their clipboard.
+Rewrite `Clean-Clode` as a Rust CLI called `clean` that strips formatting junk from LLM terminal output.
 
-Execute this task with clean minimal and idiomatic rust code.
+Behavior:
+- Clipboard-first: when run without piped input, read from clipboard, clean, print to stdout, and copy result back to clipboard
+- When piped: read from stdin, clean, print to stdout, copy to clipboard
+- Use `pbpaste`/`pbcopy` on macOS, `xclip` on Linux
+
+Cleaning logic:
+- Strip box-drawing chars: │ ┃ ╏ ╎ ▌
+- Strip leading/trailing `|` borders per line
+- Strip leading `>` and `›` prefixes (markdown quotes, prompt arrows)
+- Merge broken lines into paragraphs, preserving structure for:
+  - List markers: - * • ● ⏺ ▶ ▪ ◦
+  - Numbered lists: 1. 2. etc
+  - Lines starting with emoji markers
+  - Headings (capital followed by lowercase)
+- Collapse multiple blank lines to single blank line
+- Normalize multiple spaces to single space
+
+Keep it minimal and idiomatic.
