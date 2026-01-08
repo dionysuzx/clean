@@ -5,8 +5,7 @@ Strip formatting junk from LLM terminal output.
 ## Install
 
 ```bash
-cargo build --release
-cp target/release/clean /usr/local/bin/
+cargo install --path .
 ```
 
 ## Usage
