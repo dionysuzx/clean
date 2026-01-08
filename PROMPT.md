@@ -1,8 +1,4 @@
-To reproduce: `git clone https://github.com/TheJoWo/Clean-Clode` and feed this prompt to an LLM in that directory.
-
----
-
-Rewrite `Clean-Clode` as a Rust CLI called `clean` that strips formatting junk from LLM terminal output.
+Clone https://github.com/TheJoWo/Clean-Clode for reference, then rewrite it as a Rust CLI called `clean` that strips formatting junk from LLM terminal output.
 
 Behavior:
 - Clipboard-first: when run without piped input, read from clipboard, clean, print to stdout, and copy result back to clipboard
