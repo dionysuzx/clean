@@ -154,8 +154,14 @@ fn clean(input: &str) -> String {
 fn should_break_before(line: &str) -> bool {
     let line = line.trim_start();
 
-    // List markers
-    if line.starts_with('-')
+    // List markers (including various dash/hyphen Unicode variants)
+    if line.starts_with('-')   // U+002D hyphen-minus
+        || line.starts_with('–')  // U+2013 en-dash
+        || line.starts_with('—')  // U+2014 em-dash
+        || line.starts_with('‐')  // U+2010 hyphen
+        || line.starts_with('‑')  // U+2011 non-breaking hyphen
+        || line.starts_with('‒')  // U+2012 figure dash
+        || line.starts_with('−')  // U+2212 minus sign
         || line.starts_with('*')
         || line.starts_with('•')
         || line.starts_with('●')
@@ -243,4 +249,64 @@ fn normalize_spaces(s: &str) -> String {
     }
 
     result.trim().to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn preserves_hyphen_list_format() {
+        let input = "- which\n- i\n- don't\n- want\n- it\n- to\n- do";
+        let result = clean(input);
+        assert_eq!(result, "- which\n- i\n- don't\n- want\n- it\n- to\n- do");
+    }
+
+    #[test]
+    fn preserves_hyphen_list_with_prompt_prefix() {
+        // Terminal output often has › prefix
+        let input = "› - which\n› - i\n› - don't";
+        let result = clean(input);
+        assert_eq!(result, "- which\n- i\n- don't");
+    }
+
+    #[test]
+    fn preserves_hyphen_list_with_box_chars() {
+        // Box drawing chars before list items
+        let input = "│ - which\n│ - i\n│ - don't";
+        let result = clean(input);
+        assert_eq!(result, "- which\n- i\n- don't");
+    }
+
+    #[test]
+    fn preserves_standalone_hyphen_line() {
+        // Just a hyphen by itself
+        let input = "-";
+        let result = clean(input);
+        assert_eq!(result, "-");
+    }
+
+    #[test]
+    fn preserves_hyphen_with_pipe_prefix() {
+        // Pipe border then hyphen list
+        let input = "| - item one\n| - item two";
+        let result = clean(input);
+        assert_eq!(result, "- item one\n- item two");
+    }
+
+    #[test]
+    fn preserves_en_dash_list_format() {
+        // En-dash (U+2013) is commonly used in some outputs
+        let input = "– which\n– i\n– don't";
+        let result = clean(input);
+        assert_eq!(result, "– which\n– i\n– don't");
+    }
+
+    #[test]
+    fn preserves_minus_sign_list_format() {
+        // Minus sign (U+2212)
+        let input = "− which\n− i\n− don't";
+        let result = clean(input);
+        assert_eq!(result, "− which\n− i\n− don't");
+    }
 }
