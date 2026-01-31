@@ -226,6 +226,7 @@ fn remove_border_pipes(text: &str) -> String {
             let trimmed = trimmed.trim();
             let trimmed = trimmed.strip_prefix('>').unwrap_or(trimmed);
             let trimmed = trimmed.strip_prefix('›').unwrap_or(trimmed);
+            let trimmed = trimmed.strip_prefix('❯').unwrap_or(trimmed);
             trimmed.trim()
         })
         .collect::<Vec<_>>()
@@ -308,5 +309,13 @@ mod tests {
         let input = "− which\n− i\n− don't";
         let result = clean(input);
         assert_eq!(result, "− which\n− i\n− don't");
+    }
+
+    #[test]
+    fn strips_heavy_right_angle_prompt_prefix() {
+        // Heavy right-pointing angle quotation mark (U+276F) used as prompt
+        let input = "❯ - which\n❯ - i\n❯ - don't";
+        let result = clean(input);
+        assert_eq!(result, "- which\n- i\n- don't");
     }
 }
