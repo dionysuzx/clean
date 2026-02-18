@@ -7,7 +7,8 @@ fn main() {
         match read_clipboard() {
             Some(text) => text,
             None => {
-                eprintln!("Failed to read clipboard");
+                eprintln!("No clipboard tool found (pbpaste, xclip). Pipe input instead:");
+                eprintln!("  echo '...' | clean");
                 std::process::exit(1);
             }
         }
@@ -74,8 +75,20 @@ fn copy_to_clipboard(text: &str) -> bool {
         return child.wait().map(|s| s.success()).unwrap_or(false);
     }
 
-    false
+    // OSC 52 (terminal clipboard set, works in Lima VM via Ghostty etc.)
+    osc52_copy(text)
 }
+
+fn osc52_copy(text: &str) -> bool {
+    use base64::Engine;
+    let encoded = base64::engine::general_purpose::STANDARD.encode(text.as_bytes());
+    let Ok(mut tty) = std::fs::OpenOptions::new().write(true).open("/dev/tty") else {
+        return false;
+    };
+    let seq = format!("\x1b]52;c;{}\x07", encoded);
+    tty.write_all(seq.as_bytes()).is_ok() && tty.flush().is_ok()
+}
+
 
 fn clean(input: &str) -> String {
     if input.trim().is_empty() {

@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 atty = "0.2"
+base64 = "0.22"
